@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MastersMinds – Game</title>
+  <link rel="stylesheet" href="styles.css?v=1" />
+  <script>
+    window.MathJax = { tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] } };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+<header>
+  <div class="title-plate" role="img" aria-label="Mastermind title plate">
+    <span class="peg-col left" aria-hidden="true">
+      <span class="peg"></span>
+      <span class="peg"></span>
+      <span class="peg"></span>
+    </span>
+
+    <h1 class="plate-text">MASTERSMINDS</h1>
+
+    <span class="peg-col right" aria-hidden="true">
+      <span class="peg"></span>
+      <span class="peg"></span>
+      <span class="peg"></span>
+    </span>
+  </div>
+  <h2>Game</h2>
+  <nav>
+    <a href="index.html">Home</a>
+    <a class="active" href="game.html">Game</a>
+    <a href="theory.html">Theory</a>
+    <a href="strategies.html">Strategies</a>
+    <a href="implementation.html">Implementation</a>
+    <a href="experiments.html">Experiments</a>
+    <a href="references.html">References</a>
+  </nav>
+</header>
+
+<main>
+  <section id="game">
+    <h2>Game</h2>
+    <p>For this research, we use a simplified version of Master(s)Mind(s). Master(s)Mind(s) is a two-player game in which players $a$ and $b$ each secretly choose a code. The setting follows the game introduced by Grachten and Druiven and discussed by Kooi (2000) and Verbrugge & Mol (2008), but our simplified variant is adapted to keep the state space small and to match the modelling choices used later in the report. Concretely, the code length is fixed to 3, the available colours are restricted to five (red, blue, yellow, green, pink), and guesses and codes are required to contain no repeated colours. These restrictions reduce the number of possible codes and make it feasible to compute updates and compare strategies systematically.</p>
+
+    <div class="legend" aria-label="Color legend">
+      <span class="peg red"></span> red
+      <span class="peg blue"></span> blue
+      <span class="peg yellow"></span> yellow
+      <span class="peg green"></span> green
+      <span class="peg pink"></span> pink
+      <span class="fb-dot fb-white">W</span> white
+      <span class="fb-dot fb-black">B</span> black
+    </div>
+
+    <p>For this research we chose a simplification where a code is a sequence of length 3 (in the original game it is code length 4) drawn from the five colours above, without repetition (in the original game repetition is allowed). Thus each player has $5 \cdot 4 \cdot 3 = 60$ possible secret codes. At the start of the game, each player knows their own secret code. Before any moves are played, all 60 opponent codes are considered possible.</p>
+
+    <h3>Feedback</h3>
+    <p>Each round, the active player (starting with $a$) makes a legal guess $g$ of length 3. Feedback is computed using the usual Mastermind comparison rule between a guess and a secret code. First, the number of black pins is the number of positions where the guess matches the secret code exactly (same colour in the same position). Second, the number of white pins is the number of colours that occur in both the guess and the secret code, but are not already counted as black pins. Since repetitions are not allowed, the white-pin count is simply the size of the colour-intersection minus the black-pin count.</p>
+
+    <p>The Master(s)Mind(s) twist is that after a guess $g$, the publicly observed outcome consists of two such feedback values:</p>
+    <ol>
+      <li>The feedback comparing $g$ with $b$'s secret code.</li>
+      <li>The feedback comparing $g$ with $a$'s secret code.</li>
+    </ol>
+    <p>Thus the same public outcome can help the active player learn about the opponent while also giving the opponent information about the active player's code.</p>
+
+    <h3>Game rules</h3>
+    <p>The game proceeds as follows:</p>
+    <ol>
+      <li>At the start of the game, players $a$ and $b$ each select a random secret code from the 60 legal codes.</li>
+      <li>On a turn, the active player chooses a legal guess $g$ (length 3, no repeated colours).</li>
+      <li>Two feedback values are computed by the agents themselves (against the opponent's code and against the active player's own code) according to the Mastermind rule above, and publicly reveals the black pins, white pins or no pins.</li>
+      <li>The turn then switches to the other player.</li>
+      <li>A classical win occurs immediately after a guess if the active player's guess exactly matches the opponent's code (i.e. the feedback against the opponent is $3$ black pins). In this report, however, our evaluation focuses on epistemic success (knowledge-based identification) rather than classical win events, since strategies are defined in terms of information gain and leakage.</li>
+      <li>In addition, an epistemic win for player $a$ occurs when, based on the public history, $a$ can uniquely determine $b$'s code (i.e. only one opponent code remains consistent with everything observed so far).</li>
+    </ol>
+    
+    <p>We evaluate epistemic win conditions after each full round (i.e. after both players have made one guess and the corresponding public announcements have been applied). Thus, an epistemic win for player $a$ occurs at the end of a round when, from the accumulated public history, $a$ can uniquely determine $b$'s code, i.e. when its remaining candidate set for the opponent is a singleton. Because public announcements are shared, it is possible for both players to reach such a singleton state within the same round; we record this as a tie in the sense of symmetric epistemic success.</p>
+  </section>
+
+  <section id="game_example">
+    <h2>Toy example</h3>
+    <p>
+      <strong>
+        To avoid symbolic ambiguity in Figure 1, where the letter <span class="math">\(b\)</span>
+        is utilized to denote the color blue, we adopt the alternative lowercase labels
+        <span class="math">\(i\)</span> and <span class="math">\(j\)</span> for the agents. Throughout the remainder of
+        this report, these correspond directly to the formal agents <span class="math">\(a\)</span> and
+        <span class="math">\(b\)</span>, respectively.
+      </strong>
+    </p>
+
+    <p>This example uses a smaller toy setting (length $2$ over $\{r,g,b\}$ without repetition) purely to illustrate turn order and feedback. It is important to note that the colors are read through the perspective of agent $b$. This is because it is otherwise confusing in explaining the order of the code when having a double feedback.</p>
+
+    <p>In Figure 1, agent $a$ is on the left and agent $b$ on the right, each with a hidden two-colour code which is present to themselves but not to the other agent. The numbers on top show the turn order: $a$ guesses on odd turns, $b$ on even turns. After each guess, both players get feedback (one vs $a$’s code and one vs $b$’s), where white means “right colour, wrong position” and black means “right colour, right position.”</p>
+    
+    <p>On turn 1, $a$ guesses (green, blue). Against $a$’s code this gives one white pin, and against $b$’s code it also gives one white pin: in both cases, exactly one of the guessed colours is present but misplaced.</p>
+    
+    <p>On turn 2, $b$ infers from the single white pin vs $a$ that exactly one of {green, blue} occurs in $a$’s code, and it is in the other position. In the situation shown, that leaves two candidates for $a$: (red, green) or (blue, red). Since (blue, red) is $b$’s own code, $b$ chooses the other option and guesses (red, green), which yields two black pins. Because it is $b$’s turn, $b$ wins.</p>
+
+    <figure>
+      <img src="toy_example/5.png" alt="Caption" style="width: 75%;">
+      <figcaption>Figure 1: A toy example of a Master(s)Mind(s) game, with code length of 2, with 3 possible colours (red, green, blue) where agent $a$ starts witht the first guess.</figcaption>
+    </figure>
+  </section>
+
+</main>
+
+<footer>
+  <p>LAMAS · Project Masterminds · Game</p>
+</footer>
+</body>
+</html>

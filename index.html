@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MastersMinds – Home</title>
+  <link rel="stylesheet" href="styles.css?v=1" />
+  <script>
+    window.MathJax = { tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] } };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+<header>
+  <div class="title-plate" role="img" aria-label="Mastermind title plate">
+  <span class="peg-col left" aria-hidden="true">
+    <span class="peg"></span><span class="peg"></span><span class="peg"></span>
+  </span>
+
+  <h1 class="plate-text">MASTERSMINDS</h1>
+
+  <span class="peg-col right" aria-hidden="true">
+    <span class="peg"></span><span class="peg"></span><span class="peg"></span>
+  </span>
+</div>
+
+  <h2>Logical Aspects of Multi-agent Systems</h2>
+  <h3>Group K: Alexandru-Mihai Chirita (s4740661), Dorin-Vlad Udrea (s4645014) & Nienke Bánki (s4781090)</h3>
+
+  <p class="subtitle">
+    MastersMinds is a competitive two-sided Mastermind variant where each guess is a public announcement:
+    you learn about the opponent’s code, but you also leak information about your own code.
+  </p>
+
+  <nav>
+    <a class="active" href="index.html">Home</a>
+    <a href="game.html">Game</a>
+    <a href="theory.html">Theory</a>
+    <a href="strategies.html">Strategies</a>
+    <a href="implementation.html">Implementation</a>
+    <a href="experiments.html">Experiments</a>
+    <a href="references.html">References</a>
+  </nav>
+</header>
+
+<main>
+  <section>
+    <h2>Introduction</h2>
+    <p>This LAMAS project studies Master(s)Mind(s), designed by Grachten and Druiven and described by Kooi (2000). Master(s)Mind(s) is based on the classic board game Mastermind, a code-breaking game of imperfect information. In the standard version of Mastermind, one player secretly selects a code, a sequence of coloured pegs, and the other player tries to discover this code by making guesses. After each guess, feedback is given that indicates how close the guess is to the secret: some pegs may be correct both in colour and position, and some may have a correct colour but be placed in a different position. In this way, each round provides partial information that allows the guesser to eliminate impossible codes and gradually narrow down the set of candidates.</p>
+    
+    <p>Master(s)Mind(s) extends this setting by turning it into a fully competitive two-player game. Instead of only one player choosing a secret code, both players choose a secret code, and they alternate making guesses. Crucially, the outcome of every round is publicly observable: the information produced by a guess is not only useful for the player who made it, but can also be used by the opponent. This creates a strategic tension that is absent in standard Mastermind. Each player aims to identify the opponent’s hidden code, but at the same time must consider what the opponent can infer from the same publicly available information. As a result, decisions are strategic where a move can be good for learning, while simultaneously revealing information about one’s own situation.</p>
+    
+    <p>At any point in the game there is a (hidden) actual pair of secret codes, one chosen by each player, but players do not reason directly from that actual pair. Instead, each player reasons over a set of possible worlds: code-pairs that are still compatible with the public history (guesses and public feedback). As the game progresses, public feedback eliminates incompatible worlds, shrinking the space of possibilities. What each player considers possible can be represented using Kripke models, and the effect of each publicly observed outcome can be modelled as a public-announcement update. This makes it possible to state precisely when a player knows the opponent’s code, and how uncertainty is reduced for each player over time.</p>
+   
+    <p>This tension between learning and leaking is the main motivation of our work. Master(s)Mind(s) is useful here not because it faithfully reproduces real interaction, but because it isolates a clear information structure: public observations simultaneously restrict what one learns about the opponent and what the opponent learns about oneself. The game therefore provides a controlled setting in which these knowledge changes can be analysed precisely, without introducing additional real-world complications. Because the outcomes are public, the setting also highlights higher-order knowledge: not only what $a$ knows and what $b$ knows, but what $a$ knows that $b$ knows, what $a$ knows that $b$ knows that $a$ knows, and so on. Players can reason about each other’s reasoning at these higher orders, and this can affect which moves are strategically attractive.</p>
+    
+    <p>The goal of this project is to model Master(s)Mind(s) using epistemic logic and dynamic epistemic logic, and to use that formalisation to compare strategically different ways of playing. Concretely, we ask (i) how the game can be represented as a two-agent Kripke model of knowledge, and how each publicly observed guess-and-feedback outcome can be modelled as a public-announcement update that eliminates incompatible possible worlds; and (ii) how different strategy objectives can be defined and evaluated within this framework. We therefore implement and test several strategy settings that differ in how they trade off learning the opponent’s code against limiting information leakage about one’s own code. This allows us to state epistemic success precisely (when a player can uniquely determine the opponent’s code) and to analyse the strategic tension between learning and leaking in terms of higher-order knowledge and empirical performance.</p>
+    
+    <p>To make the epistemic model computable and to enable systematic comparison of strategies, we study a simplified version of Master(s)Mind(s). We fix the code length to $3$, restrict the available colours to five (red, blue, yellow, green, pink), and require that codes and guesses contain no repeated colours. These restrictions reduce the number of possible codes and make it feasible to compute public-announcement updates explicitly and compare strategies systematically, while preserving the central feature of the game: publicly observable outcomes that simultaneously affect what each player learns and what each player reveals.</p>
+    
+    <p>In the rest of this report, the game rules are introduced, the logical framework is explained, the implemented strategies are presented, and experimental results are reported comparing the performance of the different strategies.</p>
+  </section>
+</main>
+
+<footer>
+  <p>LAMAS · Project Masterminds · Home </p>
+</footer>
+</body>
+</html>

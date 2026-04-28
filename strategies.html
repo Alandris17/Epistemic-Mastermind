@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MastersMinds – Strategies</title>
+  <link rel="stylesheet" href="styles.css?v=1" />
+  <script>
+    window.MathJax = { tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] } };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+<header>
+  <div class="title-plate" role="img" aria-label="Mastermind title plate">
+    <span class="peg-col left" aria-hidden="true">
+      <span class="peg"></span>
+      <span class="peg"></span>
+      <span class="peg"></span>
+    </span>
+
+    <h1 class="plate-text">MASTERSMINDS</h1>
+
+    <span class="peg-col right" aria-hidden="true">
+      <span class="peg"></span>
+      <span class="peg"></span>
+      <span class="peg"></span>
+    </span>
+  </div>
+
+  <h2>Strategies</h2>
+
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="game.html">Game</a>
+    <a href="theory.html">Theory</a>
+    <a class="active" href="strategies.html">Strategies</a>
+    <a href="implementation.html">Implementation</a>
+    <a href="experiments.html">Experiments</a>
+    <a href="references.html">References</a>
+  </nav>
+</header>
+
+<main>
+  <section id="strategies">
+    <h2>Strategies</h2>
+
+    <p>
+      Agents shall pursue different objectives and goals depending on how they value learning about the opponent’s secret code versus hiding their own. We, thus, describe three relatively different strategies. Each strategy corresponds to a distinct optimisation criterion and a different implicit level of Theory of Mind (ToM) reasoning.
+    </p>
+
+    <ol>
+      <li>
+        <strong>Guessing-focused strategy (FOL).</strong>
+        This strategy is focused solely on guessing the opponent's secret code. The agent selects guesses that maximise the reduction of its own uncertainty about the opponent’s code. When providing feedback, the agent does not attempt to conceal any information: it returns the truthful Mastermind feedback value, which corresponds to the public announcement
+        <span class="math">\( \mathsf{Ann}(g,o) \)</span>, defined in the Theory Section.
+        This corresponds to a low ToM level (0th or weak 1st order) and behaves similarly to a classical Mastermind solver that is indifferent to how much information it reveals.
+      </li>
+
+      <li>
+        <strong>Hiding-focused strategy.</strong>
+        This strategy is focused solely on revealing as little information as possible about the agent’s own code. Since feedback is publicly computed by the system, the agent cannot choose which feedback is revealed. Instead, it controls information leakage indirectly by choosing guesses whose resulting public outcome (minus the opponent-comparison component and including the self-comparison component) is expected to reveal as little as possible about its own secret. When choosing its own guesses, the agent does not optimise for information gain; instead, it selects guesses that minimise the expected information it will be forced to reveal in subsequent feedback rounds. This produces a defensive style of play associated with first-order ToM: the agent anticipates how the opponent updates their beliefs and, therefore, avoids actions that would trigger informative feedback. Since guesses are always chosen from the current epistemic candidate set and ties are broken in favour of higher information gain, this strategy still guarantees epistemic progress and prevents degenerate behaviour such as repeated non-informative guesses, while allowing the agent to prioritise secrecy.
+      </li>
+
+      <li>
+        <strong>Balanced strategy.</strong>
+        This strategy attempts to balance two competing goals:
+        <ul>
+          <li>Reducing uncertainty about the opponent’s code.</li>
+          <li>Avoiding unnecessary leakage of information about its own code.</li>
+        </ul>
+        When choosing a guess, the agent evaluates both the expected information gain and the expected self-information leakage that would result from future feedback. Since feedback is publicly computed, balancing is done at guess selection time: the agent chooses guesses that trade off expected information gain about the opponent against expected leakage about itself (as induced by the public outcome pair). This strategy may use higher-order ToM, since the agent reasons about the opponent’s belief updates and about how its own behaviour will be interpreted.
+      </li>
+    </ol>
+
+    <p>
+      These information-theoretic quantities are not independent of the epistemic model: they are computed directly from the sizes of epistemic possibility sets induced by the current Kripke model after public-announcement updates.
+    </p>
+
+    <h3>Information-Theoretic Characterisation of the Strategies</h3>
+
+    <p>
+      To compare these strategies in a sound and complete manner, as well as to implement them computationally, we introduce quantitative measures from information theory. These measures allow us to evaluate how much information a guess provides to a player, and how much information a feedback message leaks to the opponent.
+    </p>
+
+    <p>
+      Here we implicitly assume a uniform prior over all codes in each candidate set, so that the uncertainty of a set can be measured as Hartley entropy, i.e. the logarithm of its cardinality.
+    </p>
+
+    <p><strong>Uncertainty and Candidate Sets.</strong></p>
+
+    <p>
+      Let <span class="math">\( \mathsf{Codes} \)</span> be the set of all valid secret codes. Each player
+      <span class="math">\( a \)</span> maintains:
+    </p>
+
+    <ul>
+      <li>
+        a set <span class="math">\( S_a \subseteq \mathsf{Codes} \)</span> of codes that are still epistemically possible for the opponent’s secret code.
+      </li>
+      <li>
+        a set <span class="math">\( T_a \subseteq \mathsf{Codes} \)</span> representing the codes that the opponent currently considers possible for
+        <span class="math">\( a \)</span>'s own secret code (as modelled by player&nbsp;<span class="math">\( a \)</span>).
+      </li>
+    </ul>
+
+    <p>Assuming uniform prior beliefs, their associated uncertainties are:</p>
+
+    <p class="math">
+      \[
+      H_a^{\mathit{opp}} \;=\; \log_2 |S_a|,
+      \qquad
+      H_a^{\mathit{self}} \;=\; \log_2 |T_a|.
+      \]
+    </p>
+
+    <p>These values express the number of bits of uncertainty remaining.</p>
+
+    <p><strong>Information Gained From a Guess.</strong></p>
+
+    <p>
+      Suppose player <span class="math">\( a \)</span> chooses a guess <span class="math">\( g \)</span> about the opponent’s code. Let
+      <span class="math">\( F \)</span> be the set of all feedback formulas. For each
+      <span class="math">\( c \in S_a \)</span>, let <span class="math">\( f(g,c) \)</span> denote the feedback the opponent would send in response to
+      <span class="math">\( g \)</span>.
+    </p>
+
+    <p>The probability of receiving feedback <span class="math">\( f \)</span> when guessing <span class="math">\( g \)</span> is</p>
+
+    <p class="math">
+      \[
+      P_a(f \mid g)
+          \;=\;
+          \frac{
+              |\{c \in S_a \mid f(g,c) = f \}|
+          }{
+              |S_a|
+          }.
+      \]
+    </p>
+
+    <p>If feedback <span class="math">\( f \)</span> is received, the player's candidate set updates to</p>
+
+    <p class="math">
+      \[
+      S_a^{g,f}
+          \;=\;
+          \{c \in S_a \mid f(g,c) = f\},
+      \qquad
+      H_a^{\mathit{opp}}(g,f)
+          \;=\;
+          \log_2 |S_a^{g,f}|.
+      \]
+    </p>
+
+    <p>The expected information gain from guess <span class="math">\( g \)</span> is</p>
+
+    <p class="math">
+      \[
+      \mathrm{IG}_a^{\mathit{opp}}(g)
+          \;=\;
+          H_a^{\mathit{opp}}
+          \;-\;
+          \sum_{f \in F} P_a(f \mid g) \cdot H_a^{\mathit{opp}}(g,f).
+      \]
+    </p>
+
+    <p>
+      This captures how much <span class="math">\( g \)</span> reduces <span class="math">\( a \)</span>’s uncertainty about the opponent’s code on average.
+    </p>
+
+    <p><strong>Information Leaked Through Feedback.</strong></p>
+
+    <p>
+      When a public feedback formula <span class="math">\( \varphi \)</span> is generated by the system in response to the opponent’s guess,
+      the opponent updates:
+    </p>
+
+    <p class="math">
+      \[
+      T_a^{\varphi}
+          \;=\;
+          \{c \in T_a \mid (g_{\mathit{opp}}, c) \models \varphi\},
+      \qquad
+      H_a^{\mathit{self}}(\varphi)
+          \;=\;
+          \log_2 |T_a^{\varphi}|.
+      \]
+    </p>
+
+    <p>The information leaked to the opponent is</p>
+
+    <p class="math">
+      \[
+      \mathrm{IL}_a(\varphi)
+          \;=\;
+          H_a^{\mathit{self}} - H_a^{\mathit{self}}(\varphi)
+          \;=\;
+          \log_2 |T_a| - \log_2 |T_a^{\varphi}|.
+      \]
+    </p>
+
+    <p>A smaller <span class="math">\( \mathrm{IL}_a(\varphi) \)</span> means the feedback is less informative to the opponent.</p>
+
+    <p><strong>Information-Theoretic Interpretation of the Three Strategies.</strong></p>
+
+    <p>
+      The strategies described above can, thus, be expressed succinctly in terms of
+      <span class="math">\( \mathrm{IG}_a^{\mathit{opp}} \)</span> and <span class="math">\( \mathrm{IL}_a \)</span>:
+    </p>
+
+    <ol>
+      <li>
+        <strong>Guessing-focused strategy (FOL).</strong>
+        Maximises <span class="math">\( \mathrm{IG}_a^{\mathit{opp}}(g) \)</span> when choosing guesses, while ignoring
+        <span class="math">\( \mathrm{IL}_a(\varphi) \)</span> when providing feedback.
+      </li>
+
+      <li>
+        <strong>Hiding-focused strategy.</strong>
+        Minimises <span class="math">\( \mathrm{IL}_a(\varphi) \)</span> when giving feedback, without attempting to maximise
+        <span class="math">\( \mathrm{IG}_a^{\mathit{opp}}(g) \)</span>.
+      </li>
+
+      <li>
+        <strong>Balanced strategy.</strong>
+        Rather than treating information gain and secrecy as independent objectives with separate weights, we observe that only their relative importance matters. Hence, without loss of generality, we normalise the utility function to a single trade-off parameter
+        <span class="math">\( \lambda > 0 \)</span>.
+        <p>
+          The balanced agent evaluates each possible guess <span class="math">\( g \)</span> using the utility function
+        </p>
+
+        <p class="math">
+          \[
+          U_a(g)
+          \;=\;
+          \mathrm{IG}_a^{\mathit{opp}}(g)
+          \;-\;
+          \lambda \cdot \mathrm{IL}_a(g),
+          \]
+        </p>
+
+        <p>and selects a guess</p>
+
+        <p class="math">
+          \[
+          g^\ast \in \arg\max_{g \in S_a} U_a(g).
+          \]
+        </p>
+
+        <p>
+          Here, <span class="math">\( \mathrm{IG}_a^{\mathit{opp}}(g) \)</span> denotes the expected reduction in uncertainty about the opponent’s secret code resulting from <span class="math">\( g \)</span>, while <span class="math">\( \mathrm{IL}_a(g) \)</span> denotes the expected self-information leakage induced by the public self-feedback associated with <span class="math">\( g \)</span>, i.e., the expected value of <span class="math">\( \mathrm{IL}_a(\varphi) \)</span> over the public self-feedback formulas induced by <span class="math">\( g \)</span>.
+        </p>
+
+        <p><em>Interpretation of the trade-off parameter <span class="math">\( \lambda \)</span>.</em></p>
+
+        <p>
+          The parameter <span class="math">\( \lambda \)</span> has a direct information-theoretic interpretation: it specifies how many bits of self-information leakage the agent is willing to tolerate in exchange for one expected bit of information gain about the opponent.
+        </p>
+
+        <ul>
+          <li>
+            <span class="math">\( \lambda \approx 0 \)</span> yields a purely guessing-focused behaviour, prioritising rapid learning while ignoring the informational consequences of public feedback.
+          </li>
+          <li>
+            Larger values of <span class="math">\( \lambda \)</span> increasingly favour secrecy, leading the agent to prefer guesses that minimise the informativeness of the resulting public self-feedback, even at the cost of slower progress in identifying the opponent’s code.
+          </li>
+        </ul>
+
+        <p>
+          Since both <span class="math">\( \mathrm{IG}_a^{\mathit{opp}}(g) \)</span> and <span class="math">\( \mathrm{IL}_a(g) \)</span> are expressed in bits, <span class="math">\( \lambda \)</span> is dimensionless and comparable across different game states.
+        </p>
+
+        <p><em>Limiting cases.</em></p>
+
+        <p>
+          The balanced strategy subsumes the other two strategies as limiting cases of the trade-off parameter <span class="math">\( \lambda \)</span>. As <span class="math">\( \lambda \to 0 \)</span>, the penalty on self-information leakage vanishes and the utility function reduces to <span class="math">\( U_a(g)=\mathrm{IG}_a^{\mathit{opp}}(g) \)</span>, yielding the guessing-focused strategy.
+        </p>
+
+        <p>
+          Conversely, as <span class="math">\( \lambda \to +\infty \)</span>, minimising self-information leakage dominates the utility, and the agent’s behaviour converges to that of the hiding-focused strategy, up to the tie-breaking rule favouring higher information gain.
+        </p>
+
+        <p>
+          Thus, the balanced strategy provides a continuous spectrum of behaviours interpolating between pure learning and pure secrecy.
+        </p>
+      </li>
+    </ol>
+  </section>
+
+</main>
+
+<footer>
+  <p>LAMAS · Project Masterminds · Strategies</p>
+</footer>
+</body>
+</html>
